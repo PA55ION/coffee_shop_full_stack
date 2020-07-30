@@ -51,8 +51,6 @@ def drink_detail(token):
 def new_drink(token):
     try:
         data = request.get_json()
-        if data is None:
-            abort(404)
         
         title = data.get('title', None)
         recipe = data.get('recipe', None)
@@ -62,9 +60,9 @@ def new_drink(token):
         return jsonify({
             'success': True,
             'drinks': [new_drink.long()]
-        })
+        }), 200
     except:
-        abort(422)
+        abort(401)
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
@@ -120,9 +118,7 @@ def not_found(error):
     }), 404
 
 @app.errorhandler(AuthError)
-def auth_error(error):
-    return jsonify({
-        'success': False,
-        'message': 'Error with authorization',
-        'error': AuthError
-    }), AuthError
+def auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
