@@ -62,7 +62,7 @@ def new_drink(token):
             'drinks': [new_drink.long()]
         }), 200
     except:
-        abort(401)
+        abort(422)
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
