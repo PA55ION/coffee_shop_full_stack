@@ -13,13 +13,13 @@ CORS(app)
 
 db_drop_and_create_all()
 
-## ROUTES
+
+# ROUTES
 @app.route('/drinks')
 def show_drinks():
     try:
         available_drink = Drink.query.all()
         print(available_drink)
-        
         drinks = [drink.short() for drink in available_drink]
         print(drinks)
 
@@ -30,6 +30,7 @@ def show_drinks():
         })
     except Exception as e:
         print(e)
+
 
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
@@ -43,26 +44,32 @@ def drink_detail(token):
             'success': True,
             'drinks': [drinks]
         }), 200
-    except:
-        abort(404)
+    except Exception:
+        return json.dumps({
+            'success': False,
+            'error': 'No drink found'
+        }), 400
+
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def new_drink(token):
     try:
         data = request.get_json()
-        
         title = data.get('title', None)
         recipe = data.get('recipe', None)
-        
         new_drink = Drink(title=title, recipe=json.dumps(recipe))
         new_drink.insert()
         return jsonify({
             'success': True,
             'drinks': [new_drink.long()]
         }), 200
-    except:
-        abort(422)
+    except Exception:
+        return json.dumps({
+            'success': False,
+            'error': 'An error occurred'
+        }), 500
+
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
@@ -82,13 +89,12 @@ def update_drink(token, drink_id):
                 'success': True,
                 'drinks': [drink.long()]
             })
-        except:
-            abort(422)
-    if drink is None:
-        return json.dumps({
-            'success': False,
-            'error': 'Drink #' + id + ' not found'
-        }), 404
+        except Exception:
+            return json.dumps({
+                'success': False,
+                'error': "An error occurred"
+            }), 500
+
 
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
@@ -100,17 +106,21 @@ def delete_drink(token, drink_id):
             'success': True,
             'delete': drink.id
         }), 200
-    except:
-        abort(404)
+    except Exception:
+        return json.dumps({
+            'success': False,
+            'error': "An error occurred"
+        }), 500
 
 
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False, 
+        "success": False,
         "error": 422,
         "message": "unprocessable"
     }), 422
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -119,6 +129,7 @@ def not_found(error):
         'message': 'Not Found',
         'error': 404,
     }), 404
+
 
 @app.errorhandler(AuthError)
 def auth_error(ex):
