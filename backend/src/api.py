@@ -84,8 +84,11 @@ def update_drink(token, drink_id):
             })
         except:
             abort(422)
-    else:
-        abort(404)
+    if drink is None:
+        return json.dumps({
+            'success': False,
+            'error': 'Drink #' + id + ' not found'
+        }), 404
 
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
